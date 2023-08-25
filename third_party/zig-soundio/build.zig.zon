@@ -1,0 +1,10 @@
+.{
+    .name = "soundio",
+    .version = "0.0.1",
+    .dependencies = .{
+        .wav = .{
+            .url = "https://github.com/veloscillator/zig-wav/archive/69ef67061fc9ecb87d0b3d21287701aefae2ec09.tar.gz",
+            .hash = "122059363a78545856a9923f0a5481e601383433088060f9e869ec345b7fe4a539b9",
+        }
+    },
+}

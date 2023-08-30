@@ -12,6 +12,7 @@ pub const Param = params.Param;
 pub const create_params = params.create_params;
 
 pub const math = @import("math.zig");
+pub const dsp = @import("dsp.zig");
 
 pub const Error = connections.Error || params.Error || error{ ModuleTypeUnknown, ModuleNameInvalid, ModuleNameTaken, ModuleRemovalFailed, ModuleNotFound, ModuleHasNoParams, CableExists, CableRemovalFailed, PatchHasInterface };
 
@@ -19,6 +20,7 @@ pub const Module = union(enum) {
     // available modules:
     chebshaper: *@import("modules/chebshaper.zig").Module,
     opensoundcontrol: *@import("modules/opensoundcontrol.zig").Module,
+    reverb: *@import("modules/reverb.zig").Module,
     sineosc: *@import("modules/sineosc.zig").Module,
     soundio: *@import("modules/soundio.zig").Module,
 
@@ -55,7 +57,7 @@ pub const Module = union(enum) {
         allocator.destroy(self);
     }
 
-    pub fn getInputs(self: *Module) []*connections.Port {
+    pub fn get_inputs(self: *Module) []*connections.Port {
         switch (self.*) {
             inline else => |m| {
                 if (comptime std.meta.trait.hasField("inputs")(@TypeOf(m.*))) {
@@ -66,7 +68,7 @@ pub const Module = union(enum) {
         return &.{};
     }
 
-    pub fn getOutputs(self: *Module) []*connections.Port {
+    pub fn get_outputs(self: *Module) []*connections.Port {
         switch (self.*) {
             inline else => |m| {
                 if (comptime std.meta.trait.hasField("outputs")(@TypeOf(m.*))) {
@@ -77,7 +79,7 @@ pub const Module = union(enum) {
         return &.{};
     }
 
-    pub fn getParams(self: *Module) []*params.Param {
+    pub fn get_params(self: *Module) []*params.Param {
         switch (self.*) {
             inline else => |m| {
                 if (comptime std.meta.trait.hasField("params")(@TypeOf(m.*))) {
@@ -88,7 +90,7 @@ pub const Module = union(enum) {
         return &.{};
     }
 
-    pub fn setParam(self: *Module, param_name: []const u8, value: f32) !void {
+    pub fn set_param(self: *Module, param_name: []const u8, value: f32) !void {
         switch (self.*) {
             inline else => |m| {
                 if (comptime !std.meta.trait.hasField("params")(@TypeOf(m.*))) {
@@ -166,8 +168,8 @@ pub const Patch = struct {
         const src_module = self.modules.get(src_module_name) orelse return Error.ModuleNotFound;
         const dst_module = self.modules.get(dst_module_name) orelse return Error.ModuleNotFound;
 
-        const src_port = try connections.get_port_from_ports_by_name(src_module.getOutputs(), src_port_name);
-        const dst_port = try connections.get_port_from_ports_by_name(dst_module.getInputs(), dst_port_name);
+        const src_port = try connections.get_port_from_ports_by_name(src_module.get_outputs(), src_port_name);
+        const dst_port = try connections.get_port_from_ports_by_name(dst_module.get_inputs(), dst_port_name);
 
         const new_cable = try connections.create_cable(self.allocator, src_port, dst_port, self.modules.getKeyPtr(src_module_name).?, self.modules.getKeyPtr(dst_module_name).?);
 
@@ -262,7 +264,7 @@ pub fn create_patch_info(patch: *Patch, allocator: std.mem.Allocator) !PatchInfo
     var i: u32 = 0;
     var module_iterator = patch.modules.iterator();
     while (module_iterator.next()) |m| : (i += 1) {
-        modules_info[i] = .{ .module_name = m.key_ptr.*, .module_type = @tagName(std.meta.activeTag(m.value_ptr.*.*)), .params = params.ParamsInfo{ .params = m.value_ptr.*.getParams() } };
+        modules_info[i] = .{ .module_name = m.key_ptr.*, .module_type = @tagName(std.meta.activeTag(m.value_ptr.*.*)), .params = params.ParamsInfo{ .params = m.value_ptr.*.get_params() } };
     }
 
     return PatchInfo{ .cables = cables_info, .modules = modules_info };

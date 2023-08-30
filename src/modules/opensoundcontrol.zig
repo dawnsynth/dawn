@@ -118,7 +118,7 @@ pub const Module = struct {
                 const value: f32 = tinyosc.c.tosc_getNextFloat(self.osc_msg);
                 std.log.info("/set_param ssd {s} {s} {d:.5}", .{ module_name, param_name, value });
                 const module = self.patch.modules.get(module_name) orelse return;
-                try module.setParam(param_name, value);
+                try module.set_param(param_name, value);
             },
             Endpoint.get_version => {
                 // /get_version
